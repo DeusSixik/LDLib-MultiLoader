@@ -1,5 +1,8 @@
 # ChangeLog
 
+## 1.0.39.a
+* Fixed EMI Crash
+
 ## 1.0.39
 * Fixed + Improved EMI compatibility (thanks to @PrototypeTrousers)
 * Fixed Number Configurator doesn't support Long
