@@ -61,7 +61,7 @@ public class HeldItemUIFactory extends UIFactory<HeldItemUIFactory.HeldItemHolde
 
         @Override
         public ModularUI createUI(Player entityPlayer) {
-            if (held.getItem() instanceof IHeldItemUIHolder itemUIHolder) {
+            if (held.getItem() instanceof IUIHolder.ItemUI itemUIHolder) {
                 return itemUIHolder.createUI(entityPlayer, this);
             }
             return null;

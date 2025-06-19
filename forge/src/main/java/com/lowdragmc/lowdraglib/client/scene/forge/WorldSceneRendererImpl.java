@@ -2,11 +2,8 @@ package com.lowdragmc.lowdraglib.client.scene.forge;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -21,9 +18,11 @@ import javax.annotation.Nonnull;
  * @implNote WorldSceneRendererImpl
  */
 public class WorldSceneRendererImpl {
-
+    /**
+     * always render it for forge blocks. forge models have their own rule.
+     */
     public static boolean canRenderInLayer(BlockState state, RenderType renderType) {
-        return ItemBlockRenderTypes.getRenderLayers(state).contains(renderType);
+        return true;
     }
 
     public static void renderBlocksForge(BlockRenderDispatcher blockRenderDispatcher, BlockState state, BlockPos pos, BlockAndTintGetter level, @Nonnull PoseStack poseStack, VertexConsumer consumer, RandomSource random, RenderType renderType) {

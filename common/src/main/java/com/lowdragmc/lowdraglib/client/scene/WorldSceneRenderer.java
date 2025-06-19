@@ -558,10 +558,8 @@ public abstract class WorldSceneRenderer {
         } else {
             PoseStack matrixstack = new PoseStack();
             for (int i = 0; i < layers.size(); i++) {
-                VertexBuffer vertexbuffer = vertexBuffers[i];
-                if (vertexbuffer.isInvalid() || vertexbuffer.getFormat() == null) continue;
-
                 RenderType layer = layers.get(i);
+
                 if (layer == RenderType.translucent() && tileEntities != null) { // render tesr before translucent
                     if (world instanceof TrackedDummyWorld level) {
                         renderEntities(level, matrixstack, buffers, sceneEntityRenderHook, particleTicks);
@@ -571,6 +569,9 @@ public abstract class WorldSceneRenderer {
                         buffers.endBatch();
                     }
                 }
+
+                VertexBuffer vertexbuffer = vertexBuffers[i];
+                if (vertexbuffer.isInvalid() || vertexbuffer.getFormat() == null) continue;
 
                 layer.setupRenderState();
 
