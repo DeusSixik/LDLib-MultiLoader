@@ -655,7 +655,7 @@ public abstract class WorldSceneRenderer {
             }
 
             if (block == Blocks.AIR) continue;
-            if (state.getRenderShape() != INVISIBLE && canRenderInLayer(state, layer)) {
+            if (state.getRenderShape() != INVISIBLE && canRenderInLayer(blockrendererdispatcher, state, pos, world, layer, world.random)) {
                 poseStack.pushPose();
                 poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
                 if (Platform.isForge()) {
@@ -678,7 +678,7 @@ public abstract class WorldSceneRenderer {
     }
 
     @ExpectPlatform
-    public static boolean canRenderInLayer(BlockState state, RenderType renderType) {
+    public static boolean canRenderInLayer(BlockRenderDispatcher blockRenderDispatcher, BlockState state, BlockPos pos, BlockAndTintGetter level, RenderType renderType, RandomSource random) {
         throw new AssertionError();
     }
 
