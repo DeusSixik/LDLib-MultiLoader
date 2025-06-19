@@ -421,10 +421,10 @@ public abstract class WorldSceneRenderer {
         } else {
             BlockRenderDispatcher blockrendererdispatcher = mc.getBlockRenderer();
             try { // render com.lowdragmc.lowdraglib.test.block in each layer
+                var random = RandomSource.createNewThreadLocalInstance();
                 renderedBlocksMap.forEach((renderedBlocks, hook) -> {
                     for (RenderType layer : RenderType.chunkBufferLayers()) {
                         layer.setupRenderState();
-                        Random random = new Random();
                         PoseStack poseStack = new PoseStack();
 
                         if (layer == RenderType.translucent()) { // render tesr before translucent
@@ -449,7 +449,7 @@ public abstract class WorldSceneRenderer {
 
                         var buffer = buffers.getBuffer(layer);
 
-                        renderBlocks(poseStack, blockrendererdispatcher, layer, new VertexConsumerWrapper(buffer), renderedBlocks, hook, particleTicks);
+                        renderBlocks(poseStack, blockrendererdispatcher, layer, new VertexConsumerWrapper(buffer), renderedBlocks, hook, particleTicks, random);
 
                         if (!endBatchLast) {
                             buffers.endBatch();
@@ -503,6 +503,7 @@ public abstract class WorldSceneRenderer {
             thread = new Thread(()->{
                 cacheState.set(CacheState.COMPILING);
                 BlockRenderDispatcher blockrendererdispatcher = mc.getBlockRenderer();
+                var random = RandomSource.createNewThreadLocalInstance();
                 try { // render com.lowdragmc.lowdraglib.test.block in each layer
                     ModelBlockRenderer.enableCaching();
                     PoseStack matrixstack = new PoseStack();
@@ -513,7 +514,7 @@ public abstract class WorldSceneRenderer {
                         BufferBuilder buffer = new BufferBuilder(layer.bufferSize());
                         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
                         renderedBlocksMap.forEach((renderedBlocks, hook) -> {
-                            renderBlocks(matrixstack, blockrendererdispatcher, layer, new VertexConsumerWrapper(buffer), renderedBlocks, hook, 0);
+                            renderBlocks(matrixstack, blockrendererdispatcher, layer, new VertexConsumerWrapper(buffer), renderedBlocks, hook, 0, random);
                         });
                         var builder = buffer.end();
 
@@ -640,7 +641,7 @@ public abstract class WorldSceneRenderer {
         }
     }
 
-    private void renderBlocks(PoseStack poseStack, BlockRenderDispatcher blockrendererdispatcher, RenderType layer, VertexConsumerWrapper wrapperBuffer, Collection<BlockPos> renderedBlocks, @Nullable ISceneBlockRenderHook hook, float partialTicks) {
+    private void renderBlocks(PoseStack poseStack, BlockRenderDispatcher blockrendererdispatcher, RenderType layer, VertexConsumerWrapper wrapperBuffer, Collection<BlockPos> renderedBlocks, @Nullable ISceneBlockRenderHook hook, float partialTicks, RandomSource random) {
         for (BlockPos pos : renderedBlocks) {
             if (blocked != null && blocked.contains(pos)) {
                 continue;
@@ -655,13 +656,13 @@ public abstract class WorldSceneRenderer {
             }
 
             if (block == Blocks.AIR) continue;
-            if (state.getRenderShape() != INVISIBLE && canRenderInLayer(blockrendererdispatcher, state, pos, world, layer, world.random)) {
+            if (state.getRenderShape() != INVISIBLE && canRenderInLayer(blockrendererdispatcher, state, pos, world, layer, random)) {
                 poseStack.pushPose();
                 poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
                 if (Platform.isForge()) {
-                    renderBlocksForge(blockrendererdispatcher, state, pos, world, poseStack, wrapperBuffer, world.random, layer);
+                    renderBlocksForge(blockrendererdispatcher, state, pos, world, poseStack, wrapperBuffer, random, layer);
                 } else {
-                    blockrendererdispatcher.renderBatched(state, pos, world, poseStack, wrapperBuffer, false, world.random);
+                    blockrendererdispatcher.renderBatched(state, pos, world, poseStack, wrapperBuffer, false, random);
                 }
                 poseStack.popPose();
             }
