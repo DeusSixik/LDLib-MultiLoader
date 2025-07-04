@@ -5,7 +5,6 @@ import com.lowdragmc.lowdraglib.gui.editor.annotation.Configurable;
 import com.lowdragmc.lowdraglib.gui.editor.annotation.DefaultValue;
 import com.lowdragmc.lowdraglib.gui.editor.annotation.NumberRange;
 import com.lowdragmc.lowdraglib.gui.editor.configurator.*;
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
 import com.lowdragmc.lowdraglib.gui.widget.TankWidget;
 import com.lowdragmc.lowdraglib.misc.FluidStorage;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
@@ -63,7 +62,7 @@ public class FluidStackAccessor extends TypesAccessor<FluidStack> {
                     updateStack.accept(newStack);
                 }, Fluids.EMPTY, forceUpdate));
         var min = 1;
-        var max = 64;
+        var max = Integer.MAX_VALUE;
         if (field.isAnnotationPresent(NumberRange.class)) {
             min = (int) field.getAnnotation(NumberRange.class).range()[0];
             max = (int) field.getAnnotation(NumberRange.class).range()[1];

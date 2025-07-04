@@ -1,5 +1,5 @@
 # ChangeLog
 
 
-## v1.0.40
-* Fixed world scene renderer issues
+## v1.0.40.a
+* Fixed fluid stack configurator amount limitation
