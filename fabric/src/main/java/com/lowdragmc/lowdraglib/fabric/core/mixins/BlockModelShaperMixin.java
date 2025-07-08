@@ -21,9 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class BlockModelShaperMixin {
     @Shadow public abstract BakedModel getBlockModel(BlockState state);
 
-    @Inject(method = "getParticleIcon",
-            at = @At(value = "RETURN"),
-            cancellable = true)
+    @Inject(method = "getParticleIcon", at = @At(value = "RETURN"), cancellable = true)
     private void reloadShaders(BlockState state, CallbackInfoReturnable<TextureAtlasSprite> cir) {
         if (state.getBlock() instanceof IBlockRendererProvider blockRendererProvider) {
             var renderer = blockRendererProvider.getRenderer(state);

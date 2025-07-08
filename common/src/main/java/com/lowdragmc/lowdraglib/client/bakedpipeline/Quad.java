@@ -13,9 +13,9 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec2;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
@@ -29,12 +29,6 @@ import static com.lowdragmc.lowdraglib.client.bakedpipeline.IQuadTransformer.*;
 @ParametersAreNonnullByDefault
 @ToString(of = { "vertPos", "vertUv" })
 public class Quad {
-
-    @Value
-    public static class Vertex {
-        Vector3f pos;
-        Vec2 uvs;
-    }
 
     private static final TextureAtlasSprite BASE = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(MissingTextureAtlasSprite.getLocation());
 
@@ -180,15 +174,18 @@ public class Quad {
         }
     }
 
+    @Getter
     private final Vector3f[] vertPos;
+    @Getter
     private final Vec2[] vertUv;
 
-    // Technically nonfinal, but treated as such except in constructor
     @Getter
-    private UVs uvs;
+    private final UVs uvs;
 
+    @Getter
     private final Builder builder;
 
+    @Getter
     private final int blocklight, skylight;
 
     private Quad(Vector3f[] verts, Vec2[] uvs, Builder builder, TextureAtlasSprite sprite) {
@@ -390,13 +387,14 @@ public class Quad {
                         Vector3f p = vertPos[v];
                         builder.vertex(p.x(), p.y(), p.z());
                         break;
-                /*case COLOR:
-                    builder.put(i, 35, 162, 204); Pretty things
-                    break;*/
+                    case COLOR:
+                        int[] c = getBuilder().colors[v];
+                        builder.color(c[0], c[1], c[2], c[3]);
+                        break;
                     case UV:
                         if (ele.getIndex() == 2) {
                             //Stuff for fullbright
-                            builder.uv2(blocklight * 0x10, skylight * 0x10);
+                            builder.uv2(blocklight << 4, skylight << 4);
                             break;
                         } else if (ele.getIndex() == 0) {
                             Vec2 uv = vertUv[v];
@@ -441,7 +439,7 @@ public class Quad {
     @RequiredArgsConstructor
     public static class Builder {
 
-        private final Map<VertexFormatElement, Integer> ELEMENT_OFFSETS = Util.make(new IdentityHashMap<>(), map -> {
+        public static final Map<VertexFormatElement, Integer> ELEMENT_OFFSETS = Util.make(new IdentityHashMap<>(), map -> {
             int i = 0;
             for (var element : DefaultVertexFormat.BLOCK.getElements())
                 map.put(element, ((VertexFormatAccessor)DefaultVertexFormat.BLOCK).getOffsets().getInt(i++) / 4); // Int offset
@@ -450,19 +448,22 @@ public class Quad {
         @Getter
         private final TextureAtlasSprite sprite;
 
+        @Getter
         @Setter
         private int quadTint = -1;
 
+        @Getter
         @Setter
-        private Direction quadOrientation;
+        private @Nullable Direction quadOrientation;
 
+        @Getter
         @Setter
         private boolean applyDiffuseLighting;
 
-        private final float[][] positions = new float[4][];
-        private final float[][] uvs = new float[4][];
-        private final int[][] uvs2 = new int[4][];
-        private final int[][] colors = new int[4][];
+        public final float[][] positions = new float[4][];
+        public final float[][] uvs = new float[4][];
+        public final int[][] uvs2 = new int[4][];
+        public final int[][] colors = new int[4][];
 
         private Map<VertexFormatElement, int[][]> packedByElement = new HashMap<>();
 
@@ -477,8 +478,7 @@ public class Quad {
                 this.positions[i] = new float[] {
                         Float.intBitsToFloat(vertices[offset + POSITION]),
                         Float.intBitsToFloat(vertices[offset + POSITION + 1]),
-                        Float.intBitsToFloat(vertices[offset + POSITION + 2]),
-                        0
+                        Float.intBitsToFloat(vertices[offset + POSITION + 2])
                 };
                 if (quadOrientation != null && directionOffset != 0) {
                     this.positions[i][0] += directionOffset * quadOrientation.getStepX();

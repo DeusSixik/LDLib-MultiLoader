@@ -3,6 +3,7 @@ package com.lowdragmc.lowdraglib.client.model.custommodel;
 import com.lowdragmc.lowdraglib.client.bakedpipeline.Quad;
 import com.lowdragmc.lowdraglib.client.bakedpipeline.Submap;
 import com.lowdragmc.lowdraglib.client.model.ModelFactory;
+import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -31,9 +32,10 @@ import java.util.concurrent.ConcurrentMap;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomBakedModel implements BakedModel {
-    private final BakedModel parent;
-    private final ConcurrentMap<Direction, ConcurrentMap<Connections, List<BakedQuad>>> sideCache;
-    private final List<BakedQuad> noSideCache;
+    @Getter
+    protected final BakedModel parent;
+    protected final ConcurrentMap<Direction, ConcurrentMap<Connections, List<BakedQuad>>> sideCache;
+    protected final List<BakedQuad> noSideCache;
 
     public CustomBakedModel(BakedModel parent) {
         this.parent = parent;
@@ -63,7 +65,7 @@ public class CustomBakedModel implements BakedModel {
         }
         return sideCache
                 .computeIfAbsent(side, key -> new ConcurrentHashMap<>())
-                .computeIfAbsent(connections, key -> buildCustomQuads(connections, parent.getQuads(state, side, rand), 0.0f));
+                .computeIfAbsent(connections, key -> buildCustomQuads(key, parent.getQuads(state, side, rand), 0.0f));
     }
 
     public static List<BakedQuad> reBakeCustomQuads(List<BakedQuad> quads, BlockAndTintGetter level, BlockPos pos, @Nonnull BlockState state, @Nullable Direction side, float offset) {

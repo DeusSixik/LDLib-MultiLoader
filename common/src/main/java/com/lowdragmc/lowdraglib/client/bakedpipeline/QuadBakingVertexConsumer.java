@@ -76,7 +76,7 @@ public class QuadBakingVertexConsumer implements VertexConsumer {
     public VertexConsumer overlayCoords(int u, int v) {
         if (IQuadTransformer.UV1 >= 0) {
             int offset = this.vertexIndex * IQuadTransformer.STRIDE + IQuadTransformer.UV1;
-            this.quadData[offset] = u & '\uffff' | (v & '\uffff') << 16;
+            this.quadData[offset] = u & 0xFFFF | (v & 0xFFFF) << 16;
         }
 
         return this;
@@ -84,12 +84,12 @@ public class QuadBakingVertexConsumer implements VertexConsumer {
 
     public VertexConsumer uv2(int u, int v) {
         int offset = this.vertexIndex * IQuadTransformer.STRIDE + IQuadTransformer.UV2;
-        this.quadData[offset] = u & '\uffff' | (v & '\uffff') << 16;
+        this.quadData[offset] = u & 0xFFFF | (v & 0xFFFF) << 16;
         return this;
     }
 
     public VertexConsumer misc(VertexFormatElement element, int... rawData) {
-        Integer baseOffset = (Integer)this.ELEMENT_OFFSETS.get(element);
+        Integer baseOffset = this.ELEMENT_OFFSETS.get(element);
         if (baseOffset != null) {
             int offset = this.vertexIndex * IQuadTransformer.STRIDE + baseOffset;
             System.arraycopy(rawData, 0, this.quadData, offset, rawData.length);
