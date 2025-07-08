@@ -1,5 +1,6 @@
 package com.lowdragmc.lowdraglib.test;
 
+import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.gui.widget.TankWidget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
@@ -21,6 +22,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
@@ -103,6 +106,25 @@ public class TestXEIWidgetGroup extends WidgetGroup {
                 .setBackground(TankWidget.FLUID_SLOT_TEXTURE)
                 .setIngredientIO(IngredientIO.CATALYST);
 
+        var draggableGroup = new DraggableScrollableWidgetGroup(60, 40, 18, 20)
+                .setScrollable(true).setDraggable(true).setUseScissor(true)
+                .setScrollWheelDirection(DraggableScrollableWidgetGroup.ScrollWheelDirection.HORIZONTAL)
+                .setYScrollBarWidth(6).setXScrollBarHeight(6);
+
+        ItemStack potion = Items.LINGERING_POTION.getDefaultInstance();
+        PotionUtils.setPotion(potion, Potions.LUCK);
+        draggableGroup.addWidget(new SlotWidget(new ItemStackTransfer(potion), 0, 0, 0, false, false)
+                .setBackgroundTexture(SlotWidget.ITEM_SLOT_TEXTURE)
+                .setIngredientIO(IngredientIO.CATALYST));
+        potion = Items.SPLASH_POTION.getDefaultInstance();
+        PotionUtils.setPotion(potion, Potions.STRONG_POISON);
+        draggableGroup.addWidget(new SlotWidget(new ItemStackTransfer(potion), 0, 18, 0, false, false)
+                .setBackgroundTexture(SlotWidget.ITEM_SLOT_TEXTURE)
+                .setIngredientIO(IngredientIO.OUTPUT));
+        draggableGroup.addWidget(new TankWidget(new FluidStorage(FluidStack.create(Fluids.FLOWING_WATER, 20000)), 0, 36, 0, 18, 18, false, false)
+                .setBackground(TankWidget.FLUID_SLOT_TEXTURE)
+                .setIngredientIO(IngredientIO.INPUT));
+
         addWidget(input1);
         addWidget(input2);
         addWidget(input3);
@@ -114,5 +136,6 @@ public class TestXEIWidgetGroup extends WidgetGroup {
         addWidget(catalystFluid);
         addWidget(inputFluid2);
         addWidget(inputFluid3);
+        addWidget(draggableGroup);
     }
 }

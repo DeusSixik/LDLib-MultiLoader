@@ -295,9 +295,7 @@ public class ModularUIGuiContainer extends AbstractContainerScreen<ModularUICont
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         focused = false;
-        if (modularUI.mainGroup.keyPressed(keyCode, scanCode, modifiers)) {
-            return false;
-        }
+        if (modularUI.mainGroup.keyPressed(keyCode, scanCode, modifiers)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -333,9 +331,7 @@ public class ModularUIGuiContainer extends AbstractContainerScreen<ModularUICont
     }
 
     public void superMouseClicked(double mouseX, double mouseY, int mouseButton) {
-        try {
-            super.mouseClicked(mouseX, mouseY, mouseButton);
-        } catch (Exception ignored) { }
+        super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     public void superMouseDragged(double pMouseX, double pMouseY, int pButton, double pDragX, double pDragY) {
