@@ -662,7 +662,7 @@ public abstract class WorldSceneRenderer {
                 if (Platform.isForge()) {
                     renderBlocksForge(blockrendererdispatcher, state, pos, world, poseStack, wrapperBuffer, random, layer);
                 } else {
-                    blockrendererdispatcher.renderBatched(state, pos, world, poseStack, wrapperBuffer, false, random);
+                    blockrendererdispatcher.renderBatched(state, pos, world, poseStack, wrapperBuffer, true, random);
                 }
                 poseStack.popPose();
             }

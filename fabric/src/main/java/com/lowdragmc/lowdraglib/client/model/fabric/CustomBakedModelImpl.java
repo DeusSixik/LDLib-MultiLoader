@@ -148,9 +148,9 @@ public class CustomBakedModelImpl extends CustomBakedModel implements WrapperBak
             int packedColor = quadView.color(i);
             builder.colors[i] = new int[] {
                     packedColor & 0xFF,
-                    (packedColor << 8) & 0xFF,
-                    (packedColor << 16) & 0xFF,
-                    (packedColor << 24) & 0xFF
+                    (packedColor >> 8) & 0xFF,
+                    (packedColor >> 16) & 0xFF,
+                    (packedColor >> 24) & 0xFF
             };
             builder.uvs[i] = new float[] {
                     quadView.u(i),
@@ -195,7 +195,7 @@ public class CustomBakedModelImpl extends CustomBakedModel implements WrapperBak
                     }
                     case COLOR -> {
                         int[] c = quad.getBuilder().colors[v];
-                        int color = FastColor.ARGB32.color(c[0], c[1], c[2], c[3]);
+                        int color = FastColor.ARGB32.color(c[3], c[0], c[1], c[2]);
                         emitter.color(v, color);
                     }
                     case UV -> {

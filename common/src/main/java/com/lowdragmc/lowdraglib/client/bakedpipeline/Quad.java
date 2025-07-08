@@ -488,9 +488,9 @@ public class Quad {
                 int packedColor = vertices[offset + COLOR];
                 this.colors[i] = new int[] {
                         packedColor & 0xFF,
-                        (packedColor << 8) & 0xFF,
-                        (packedColor << 16) & 0xFF,
-                        (packedColor << 24) & 0xFF
+                        (packedColor >> 8) & 0xFF,
+                        (packedColor >> 16) & 0xFF,
+                        (packedColor >> 24) & 0xFF
                 };
                 this.uvs[i] = new float[] {
                         Float.intBitsToFloat(vertices[offset + UV0]),
