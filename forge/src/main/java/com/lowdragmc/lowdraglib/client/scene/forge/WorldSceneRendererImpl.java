@@ -29,10 +29,19 @@ public class WorldSceneRendererImpl {
     public static ModelData getModelData(BakedModel model, BlockState state, BlockPos pos, BlockAndTintGetter level) {
 
         ModelDataManager manager = level.getModelDataManager();
+        ModelData modelData = null;
         if (manager == null && level instanceof DummyWorld dummyLevel) {
             manager = dummyLevel.getLevel().getModelDataManager();
         }
-        ModelData modelData = manager.getAt(pos);
+        if (manager != null) {
+            modelData = manager.getAt(pos);
+        }
+        if (modelData == null) {
+            var be = level.getExistingBlockEntity(pos);
+            if (be != null) {
+                modelData = be.getModelData();
+            }
+        }
         return model.getModelData(level, pos, state, modelData != null ? modelData : ModelData.EMPTY);
     }
 
