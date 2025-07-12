@@ -338,4 +338,25 @@ public final class Transform implements IPersistedSerializable, IConfigurable {
     public void _setInternalParentID(UUID uuid) {
         _parentId = uuid;
     }
+
+    /**
+     * Get the parent ID.
+     */
+    public UUID _getInternalParentID() {
+        return _parentId;
+    }
+
+    /**
+     * Copies the transform properties from another Transform instance.
+     * @param local If true, copies the local transform properties (position, rotation, scale);
+     *              otherwise copies the world transform properties.
+     * @param copyHierarchy If true, copies the parent-child hierarchy along with the transform.
+     */
+    public void copyTransformFrom(Transform transform, boolean local, boolean copyHierarchy) {
+        set(transform, local);
+        if (copyHierarchy) {
+            parent(transform.parent());
+            _setInternalParentID(transform._getInternalParentID());
+        }
+    }
 }

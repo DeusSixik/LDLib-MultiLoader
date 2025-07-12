@@ -1,5 +1,8 @@
 # ChangeLog
 
+## v1.0.41
+* Improve transform APIs
+
 ## v1.0.40.b
 * Fixed world manager may be `null` while rendering the world scene
 
