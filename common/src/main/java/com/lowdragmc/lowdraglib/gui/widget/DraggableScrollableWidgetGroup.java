@@ -356,6 +356,7 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
     }
 
     @Override
+    @Environment(EnvType.CLIENT)
     public void drawOverlay(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         int x = getPosition().x;
         int y = getPosition().y;
