@@ -1,5 +1,8 @@
 # ChangeLog
 
+## v1.0.41.b
+* Fixed RPCMethod crash
+
 ## v1.0.41.a
 * Fixed DraggableScrollableWidget crash with client-side code
 
