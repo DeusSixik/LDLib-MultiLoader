@@ -15,7 +15,7 @@ public interface MixinPluginShared {
 	}
 
 	@ExpectPlatform
-	private static boolean isModLoaded(String modId) {
+	static boolean isModLoaded(String modId) {
 		throw new AssertionError();
 	}
 
