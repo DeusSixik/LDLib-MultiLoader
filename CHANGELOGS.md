@@ -1,5 +1,8 @@
 # ChangeLog
 
+## v1.0.42
+* Fixed mod loading check during mixin
+
 ## v1.0.41.b
 * Fixed RPCMethod crash
 
