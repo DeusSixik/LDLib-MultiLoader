@@ -32,8 +32,6 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class VirtualChunk extends LevelChunk {
-
-	final DummyWorld world;
 	boolean needsLight;
 	final int x;
 	final int z;
@@ -42,8 +40,6 @@ public class VirtualChunk extends LevelChunk {
 
 	public VirtualChunk(DummyWorld world, int x, int z) {
 		super(world, new ChunkPos(x, z));
-
-		this.world = world;
 		this.needsLight = true;
 		this.x = x;
 		this.z = z;
@@ -55,6 +51,10 @@ public class VirtualChunk extends LevelChunk {
 			sections[i] = new VirtualChunkSection(this, i << 4);
 		}
 
+	}
+
+	public DummyWorld getDummyWorld() {
+		return (DummyWorld) this.getLevel();
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class VirtualChunk extends LevelChunk {
 
 	@Override
 	public void removeBlockEntity(BlockPos pos) {
-		world.removeBlockEntity(pos);
+		getDummyWorld().removeBlockEntity(pos);
 	}
 
 	@Override
@@ -153,12 +153,12 @@ public class VirtualChunk extends LevelChunk {
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pos) {
-		return world.getBlockEntity(pos);
+		return getDummyWorld().getBlockEntity(pos);
 	}
 
 	@Override
 	public BlockState getBlockState(BlockPos pos) {
-		return world.getBlockState(pos);
+		return getDummyWorld().getBlockState(pos);
 	}
 
 	@Override
@@ -205,7 +205,7 @@ public class VirtualChunk extends LevelChunk {
 
 	@Override
 	public int getMinBuildHeight() {
-		return world.getMinBuildHeight();
+		return getDummyWorld().getMinBuildHeight();
 	}
 
 	@Override
