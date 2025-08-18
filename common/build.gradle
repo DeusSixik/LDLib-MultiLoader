@@ -62,9 +62,19 @@ dependencies {
 
 publishing {
     publications {
-        mavenCommon(MavenPublication) {
+        register("mavenCommon", MavenPublication) {
             artifactId = archivesBaseName
-            from components.java
+            // from components.java
+
+            artifact(remapJar) {
+                builtBy remapJar
+                classifier ''
+            }
+
+            artifact(sourcesJar) {
+                builtBy sourcesJar
+                classifier 'sources'
+            }
         }
     }
 
