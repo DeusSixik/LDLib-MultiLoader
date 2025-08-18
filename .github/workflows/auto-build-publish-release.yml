@@ -31,7 +31,6 @@ jobs:
       MAVEN_USER: ${{ secrets.MAVEN_USER }}
     
     steps:
-      # 更新到最新版本的actions
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -42,8 +41,8 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'  # 更现代的发行版
-          cache: 'gradle'  # 启用Gradle缓存
+          distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
@@ -81,7 +80,6 @@ jobs:
         if: ${{ inputs.publishCurseForgeAndModrinth }}
         id: version
         run: |
-          # 更健壮的版本提取方式
           FABRIC_VERSION=$(find fabric/build/libs -name "*.jar" -not -name "*sources*" -not -name "*shadow*" -not -name "*dev*" -exec basename {} \; | head -1 | sed 's/ldlib-fabric-\(.*\)\.jar/\1/')
           FORGE_VERSION=$(find forge/build/libs -name "*.jar" -not -name "*sources*" -not -name "*shadow*" -not -name "*dev*" -exec basename {} \; | head -1 | sed 's/ldlib-forge-\(.*\)\.jar/\1/')
           
@@ -91,7 +89,6 @@ jobs:
           echo "Fabric version: $FABRIC_VERSION"
           echo "Forge version: $FORGE_VERSION"
 
-      # 将Fabric和Forge发布合并到一个job中，但分开步骤
       - name: Publish to CurseForge and Modrinth (Fabric)
         if: ${{ inputs.publishCurseForgeAndModrinth }}
         uses: Kir-Antipov/mc-publish@v3.3
