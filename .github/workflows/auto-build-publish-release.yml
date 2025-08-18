@@ -42,4 +42,117 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: 'temurin'  # 更现代的发行版
+          cache: 'gradle'  # 启用Gradle缓存
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build project
+        run: ./gradlew build --no-daemon --parallel
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m"
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            fabric/build/libs/
+            forge/build/libs/
+          retention-days: 7
+
+      - name: Publish to Maven
+        if: ${{ inputs.publishMaven }}
+        run: ./gradlew publish --no-daemon
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m"
+
+      - name: Extract version information
+        if: ${{ inputs.publishCurseForgeAndModrinth }}
+        id: version
+        run: |
+          # 更健壮的版本提取方式
+          FABRIC_VERSION=$(find fabric/build/libs -name "*.jar" -not -name "*sources*" -not -name "*shadow*" -not -name "*dev*" -exec basename {} \; | head -1 | sed 's/ldlib-fabric-\(.*\)\.jar/\1/')
+          FORGE_VERSION=$(find forge/build/libs -name "*.jar" -not -name "*sources*" -not -name "*shadow*" -not -name "*dev*" -exec basename {} \; | head -1 | sed 's/ldlib-forge-\(.*\)\.jar/\1/')
+          
+          echo "fabric_version=$FABRIC_VERSION" >> $GITHUB_OUTPUT
+          echo "forge_version=$FORGE_VERSION" >> $GITHUB_OUTPUT
+          
+          echo "Fabric version: $FABRIC_VERSION"
+          echo "Forge version: $FORGE_VERSION"
+
+      # 将Fabric和Forge发布合并到一个job中，但分开步骤
+      - name: Publish to CurseForge and Modrinth (Fabric)
+        if: ${{ inputs.publishCurseForgeAndModrinth }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: B1CBVXHX
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: 626676
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          files: |
+            fabric/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
+            fabric/build/libs/*-@(sources|javadoc).jar
+
+          name: LDLib ${{ steps.version.outputs.fabric_version }}-fabric
+          version: mc${{ steps.version.outputs.fabric_version }}-fabric
+          version-type: ${{ inputs.versionType }}
+          changelog-file: CHANGELOG.*
+
+          loaders: fabric
+          game-versions: ${{ github.ref_name }}
+          game-version-filter: none
+          java: 17
+          
+          retry-attempts: 3
+          retry-delay: 10000
+          fail-mode: fail
+
+      - name: Publish to CurseForge and Modrinth (Forge)
+        if: ${{ inputs.publishCurseForgeAndModrinth }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: B1CBVXHX
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: 626676
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          files: |
+            forge/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
+            forge/build/libs/*-@(sources|javadoc).jar
+
+          name: LDLib ${{ steps.version.outputs.forge_version }}-forge
+          version: mc${{ steps.version.outputs.forge_version }}-forge
+          version-type: ${{ inputs.versionType }}
+          changelog-file: CHANGELOG.*
+
+          loaders: forge
+          game-versions: ${{ github.ref_name }}
+          game-version-filter: none
+          java: 17
+          
+          retry-attempts: 3
+          retry-delay: 10000
+          fail-mode: fail
+
+      - name: Create release summary
+        if: ${{ inputs.publishCurseForgeAndModrinth }}
+        run: |
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Fabric Version**: ${{ steps.version.outputs.fabric_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Forge Version**: ${{ steps.version.outputs.forge_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Type**: ${{ inputs.versionType }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Game Version**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Maven Published**: ${{ inputs.publishMaven }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mod Platforms Published**: ${{ inputs.publishCurseForgeAndModrinth }}" >> $GITHUB_STEP_SUMMARY
