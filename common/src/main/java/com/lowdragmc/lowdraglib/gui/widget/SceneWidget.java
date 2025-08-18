@@ -219,7 +219,15 @@ public class SceneWidget extends WidgetGroup {
         if (world == null) return;
         core = new HashSet<>();
         dummyWorld = new TrackedDummyWorld(world);
-        dummyWorld.setRenderFilter(pos -> renderer.renderedBlocksMap.keySet().stream().anyMatch(c -> c.contains(pos)));
+        dummyWorld.setRenderFilter(pos -> {
+            var renderedBlocks = renderer.renderedBlocksMap.keySet();
+            for (var blocks : renderedBlocks) {
+                if (blocks.contains(pos)) {
+                    return true;
+                }
+            }
+            return false;
+        });
         if (renderer != null) {
             renderer.deleteCacheBuffer();
         }
