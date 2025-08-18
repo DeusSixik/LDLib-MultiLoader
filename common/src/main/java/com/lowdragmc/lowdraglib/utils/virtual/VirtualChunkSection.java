@@ -18,7 +18,7 @@ public class VirtualChunkSection extends LevelChunkSection {
 	public final int zStart;
 
 	public VirtualChunkSection(VirtualChunk owner, int yBase) {
-		super(owner.world.registryAccess().registryOrThrow(Registries.BIOME));
+		super(owner.getDummyWorld().registryAccess().registryOrThrow(Registries.BIOME));
 		this.owner = owner;
 		this.xStart = owner.getPos()
 			.getMinBlockX();
@@ -31,7 +31,7 @@ public class VirtualChunkSection extends LevelChunkSection {
 	public BlockState getBlockState(int x, int y, int z) {
 		// ChunkSection#getBlockState expects local chunk coordinates, so we add to get
 		// back into world coords.
-		return owner.world.getBlockState(x + xStart, y + yStart, z + zStart);
+		return owner.getDummyWorld().getBlockState(x + xStart, y + yStart, z + zStart);
 	}
 
 	@Override
