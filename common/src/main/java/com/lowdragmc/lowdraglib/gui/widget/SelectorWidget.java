@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 public class SelectorWidget extends WidgetGroup {
     protected List<SelectableWidgetGroup> selectables;
     @Configurable(name = "ldlib.gui.editor.name.candidates")
-    protected List<String> candidates;
+    protected List<String> candidates = new ArrayList<>();
     @Configurable(name = "ldlib.gui.editor.name.currentValue")
     protected String currentValue;
     @Configurable(name = "ldlib.gui.editor.name.maxCount")
@@ -62,7 +62,7 @@ public class SelectorWidget extends WidgetGroup {
         this.button = new ButtonWidget(0,0, width, height, IGuiTexture.EMPTY, d -> {
             if (d.isRemote) setShow(!isShow);
         });
-        this.candidates = candidates;
+        this.candidates.addAll(candidates);
         this.selectables = new ArrayList<>();
         this.addWidget(button);
         this.addWidget(new ImageWidget(0, 1, width, height - 1, textTexture = new TextTexture("", fontColor).setWidth(width).setType(TextTexture.TextType.ROLL)));
@@ -140,7 +140,10 @@ public class SelectorWidget extends WidgetGroup {
 
     @ConfigSetter(field = "candidates")
     public void setCandidates(List<String> candidates) {
-        this.candidates = candidates;
+        if (this.candidates != candidates) {
+            this.candidates.clear();
+            this.candidates.addAll(candidates);
+        }
         computeLayout();
     }
 

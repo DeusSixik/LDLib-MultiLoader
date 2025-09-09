@@ -98,7 +98,12 @@ public class NumberConfigurator extends ValueConfigurator<Number> {
     }
 
     private void onNumberUpdate(String s) {
-        Number newValue = isDecimal ? Float.parseFloat(s) : Long.parseLong(s);
+        Number newValue;
+        if (isDecimal) {
+            newValue=Double.parseDouble(s);
+        } else {
+            newValue=Long.parseLong(s);
+        }
         if (value instanceof Integer && !value.equals(newValue.intValue())) {
             value = newValue.intValue();
             updateValue();
