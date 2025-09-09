@@ -204,11 +204,6 @@ public class VirtualChunk extends LevelChunk {
 	}
 
 	@Override
-	public int getMinBuildHeight() {
-		return getDummyWorld().getMinBuildHeight();
-	}
-
-	@Override
 	public TickContainerAccess<Fluid> getFluidTicks() {
 		return BlackholeTickAccess.emptyContainer();
 	}
