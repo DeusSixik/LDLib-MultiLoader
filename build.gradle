@@ -79,7 +79,7 @@ allprojects {
     apply plugin: "maven-publish"
 
     archivesBaseName = "${project.name}-${minecraft_version}"
-    group = rootProject.maven_group
+    group = "${maven_group}"
     version = "${mod_version}"
 
     repositories {
