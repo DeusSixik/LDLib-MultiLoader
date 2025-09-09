@@ -1,5 +1,9 @@
 # ChangeLogs
 
+## v1.0.44
+* Fixed crash L2Hostility.
+* Fix UI rounding error and Crash related to SelectorWidget (thanks to @cr3eperall)
+
 ## v1.0.43
 * Fixed crash L2Hostility, which tried to access level during virtual chunk <init>.
 * Fixed crash with jGUI, they don't use mixin correctly
