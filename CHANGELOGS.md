@@ -1,5 +1,9 @@
 # ChangeLogs
 
+## v1.0.45
+* Fixed crash L2Hostility by Refactor VirtualChunk to fix. (thanks to @Taskeren)
+* Fixed LabelWidget::detectAndSendChanges logic when using Component (thanks to @snylonue)
+
 ## v1.0.44
 * Fixed crash L2Hostility.
 * Fix UI rounding error and Crash related to SelectorWidget (thanks to @cr3eperall)
