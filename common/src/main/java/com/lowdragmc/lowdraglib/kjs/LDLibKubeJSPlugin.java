@@ -105,6 +105,9 @@ public class LDLibKubeJSPlugin extends KubeJSPlugin {
     public void registerTypeWrappers(ScriptType type, TypeWrappers typeWrappers) {
         super.registerTypeWrappers(type, typeWrappers);
         typeWrappers.register(FluidStack.class, (ctx, o) -> {
+            if (o instanceof FluidStack stack) {
+                return stack;
+            }
             var fluidStack = FluidStackJS.of(o).getFluidStack();
             return FluidStack.create(fluidStack.getFluid(), fluidStack.getAmount(), fluidStack.getTag());
         });
