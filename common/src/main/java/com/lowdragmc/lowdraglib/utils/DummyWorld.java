@@ -14,9 +14,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.*;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.AbortableIterationConsumer;
+import net.minecraft.util.profiling.InactiveProfiler;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -30,6 +34,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -38,7 +43,6 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import net.minecraft.world.level.storage.WritableLevelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
@@ -64,7 +68,10 @@ import java.util.function.Supplier;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class DummyWorld extends Level {
-
+    private static final ResourceKey<Level> LEVEL_ID;
+    static {
+        LEVEL_ID = ResourceKey.create(Registries.DIMENSION, LDLib.location("dummy_world"));
+    }
     protected DummyChunkSource chunkProvider = new DummyChunkSource(this);
     private final BiomeManager biomeManager;
     public WeakReference<Level> level;
@@ -75,11 +82,22 @@ public class DummyWorld extends Level {
 
 
     public DummyWorld(Level level) {
-        super((WritableLevelData) level.getLevelData(), level.dimension(), level.registryAccess(), level.dimensionTypeRegistration(), level::getProfiler,
+        super(createLevelData(),
+                LEVEL_ID,
+                level.registryAccess(),
+                level.registryAccess().registryOrThrow(Registries.DIMENSION_TYPE)
+                        .getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
+                () -> InactiveProfiler.INSTANCE,
                 true, false, 0, 0);
         this.level = new WeakReference<>(level);
         this.lighter = new LevelLightEngine(chunkProvider, true, false);
         this.biomeManager = new BiomeManager(this, 0);
+    }
+
+    private static ClientLevel.ClientLevelData createLevelData() {
+        var levelData = new ClientLevel.ClientLevelData(Difficulty.PEACEFUL, false /* hardcore */, false /* flat */);
+        levelData.setDayTime(6000);
+        return levelData;
     }
 
     @NotNull
