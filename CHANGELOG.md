@@ -1,3 +1,2 @@
-## v1.0.46
-* Fixed DummyWorld memory leak
-* Fixed KJSPlugin wrapper for LDLib FluidStack
+## v1.0.47
+* Fixed a Mixin issue while loading massive mods
