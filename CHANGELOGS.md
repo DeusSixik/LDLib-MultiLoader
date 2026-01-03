@@ -1,7 +1,7 @@
 # ChangeLogs
 
 ## v1.0.48
-* Added inflate width/height values, to pair with x/y offset. Allows stacking of textures of different sizes without multiple widgets.
+* Added inflate width/height values to pair with x/y offset. Allows stacking of textures of different sizes without multiple widgets.
 * Added option for smooth progress texture, on by default to prevent breaks, how many steps to make.
 * Added overflow and pop out text types.
 * Added background inflate x/y values, intended for easily making the background on pop out text larger.
@@ -16,9 +16,11 @@
 * CodeEditorWidget: option for unformatted text, basically just a text pane. (UNTESTED)
 * Added SliderWidget
     * Known issue: when dragging a slider, if the cursor passes a slider widget lower on the update order, the dragging will be stolen.
+
+* Fixed bug where drag splitting an itemStack would not render correctly.
+* Fixed missing lang for some widget
 * Fixed EMI invisible tooltips for slots
 * Improve Renderer to check blockstate if the medeldata not found
-* Fixed bug where drag splitting an itemStack would not render correctly.
 
 ## v1.0.47
 * Fixed a Mixin issue while loading massive mods
