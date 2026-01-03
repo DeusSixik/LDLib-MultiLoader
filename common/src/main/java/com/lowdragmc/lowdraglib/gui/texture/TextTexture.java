@@ -2,10 +2,12 @@ package com.lowdragmc.lowdraglib.gui.texture;
 
 import com.lowdragmc.lowdraglib.LDLib;
 import com.lowdragmc.lowdraglib.gui.editor.annotation.*;
+import com.lowdragmc.lowdraglib.gui.editor.data.resource.Resource;
 import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import lombok.Getter;
 import lombok.Setter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,6 +18,7 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import org.joml.Vector4f;
 
+import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -32,8 +35,16 @@ public class TextTexture extends TransformTexture {
     public int color;
 
     @Configurable
+    @Getter
+    public IGuiTexture backgroundTexture;
+
+    @Configurable
     @NumberColor
     public int backgroundColor;
+
+    @Configurable
+    @NumberRange(range = {Integer.MIN_VALUE, Integer.MAX_VALUE})
+    public int inflateBackgroundX = 0, inflateBackgroundY = 0;
 
     @Configurable(tips = "ldlib.gui.editor.tips.image_text_width")
     @NumberRange(range = {1, Integer.MAX_VALUE})
@@ -77,6 +88,10 @@ public class TextTexture extends TransformTexture {
         this("", -1);
         setSupplier(text);
         setDropShadow(true);
+    }
+    public TextTexture(String text, IGuiTexture backgroundTexture) {
+        this(text);
+        this.backgroundTexture = backgroundTexture;
     }
 
     public TextTexture setSupplier(Supplier<String> supplier) {
@@ -126,10 +141,10 @@ public class TextTexture extends TransformTexture {
         if (LDLib.isClient()) {
             if (this.width > 0) {
                 texts = Minecraft.getInstance()
-                        .font.getSplitter()
-                        .splitLines(text, width, Style.EMPTY)
-                        .stream().map(FormattedText::getString)
-                        .collect(Collectors.toList());
+                    .font.getSplitter()
+                    .splitLines(text, width, Style.EMPTY)
+                    .stream().map(FormattedText::getString)
+                    .collect(Collectors.toList());
                 if (texts.isEmpty()) {
                     texts = Collections.singletonList(text);
                 }
@@ -145,12 +160,30 @@ public class TextTexture extends TransformTexture {
         return this;
     }
 
+    public TextTexture setInflateBackgroundY(int inflateBackground) {
+        this.inflateBackgroundX = inflateBackground;
+        this.inflateBackgroundY = inflateBackground;
+        return this;
+    }
+    public TextTexture setInflateBackgroundY(int inflateBackgroundX, int inflateBackgroundY) {
+        this.inflateBackgroundX = inflateBackgroundX;
+        this.inflateBackgroundY = inflateBackgroundY;
+        return this;
+    }
+
+    public TextTexture setBackgroundTexture(IGuiTexture backgroundTexture) {
+        this.backgroundTexture = backgroundTexture;
+        return this;
+    }
+
     @Environment(EnvType.CLIENT)
     @Override
     protected void drawInternal(GuiGraphics graphics, int mouseX, int mouseY, float x, float y, int width, int height) {
         updateTick();
         if (backgroundColor != 0) {
-            DrawerHelper.drawSolidRect(graphics, (int) x, (int) y, width, height, backgroundColor);
+            if (!type.customBackground) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, x, y, width, height);
+            }
         }
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 400);
@@ -201,6 +234,14 @@ public class TextTexture extends TransformTexture {
                 float _y = y + (height - textH) / 2f;
                 graphics.drawString(fontRenderer, line, (int) x, (int) _y, color, dropShadow);
             }
+        } else if (type == TextType.RIGHT_HIDE) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY) && texts.size() > 1) {
+                drawRollTextLine(graphics, x, y, width, height, fontRenderer, textH, text);
+            } else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                float _y = y + (height - textH) / 2f;
+                graphics.drawString(fontRenderer, line, (int) x + (width - fontRenderer.width(line)), (int) _y, color, dropShadow);
+            }
         } else if (type == TextType.LEFT_ROLL || type == TextType.LEFT_ROLL_ALWAYS) {
             if (texts.size() > 1 && (type == TextType.LEFT_ROLL_ALWAYS || Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY))) {
                 drawRollTextLine(graphics, x, y, width, height, fontRenderer, textH, text);
@@ -208,9 +249,92 @@ public class TextTexture extends TransformTexture {
                 float _y = y + (height - textH) / 2f;
                 graphics.drawString(fontRenderer, texts.get(0), (int) x, (int) _y, color, dropShadow);
             }
+        } else if (type == TextType.LEFT_OVERFLOW) {
+            graphics.drawString(fontRenderer, text, (int) x, (int) y, color);
+        } else if (type == TextType.RIGHT_OVERFLOW) {
+            graphics.drawString(fontRenderer, text, (int) x + width - fontRenderer.width(text), (int) y, color);
+        } else if (type == TextType.OVERFLOW) {
+            graphics.drawString(fontRenderer, text, (int) x + width / 2 - fontRenderer.width(text) / 2, (int) y, color);
+        } else if (type == TextType.POP_OUT) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY)) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x + width / 2f - fontRenderer.width(text) / 2f - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(text) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                graphics.drawString(fontRenderer, text, (int) x + width / 2 - fontRenderer.width(text) / 2, (int) y + height / 2 - fontRenderer.lineHeight / 2 - 1, color, dropShadow);
+            }
+            else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                drawTextLine(graphics, x, y, width, height, fontRenderer, textH, line);
+            }
+        } else if (type == TextType.POP_OUT_BG) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY)) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x + width / 2f - fontRenderer.width(text) / 2f - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(text) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                graphics.drawString(fontRenderer, text, (int) x + width / 2 - fontRenderer.width(text) / 2, (int) y + height / 2 - fontRenderer.lineHeight / 2 - 1, color, dropShadow);
+            }
+            else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x + width / 2f - fontRenderer.width(line) / 2f - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(line) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                drawTextLine(graphics, x, y, width, height, fontRenderer, textH, line);
+            }
+        } else if (type == TextType.RIGHT_POP_OUT) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY)) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x + width - fontRenderer.width(text) - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(text) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                graphics.drawString(fontRenderer, text, (int) x + width - fontRenderer.width(text), (int) y + height / 2 - fontRenderer.lineHeight / 2 - 1, color, dropShadow);
+            }
+            else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                float _y = y + (height - textH) / 2f;
+                graphics.drawString(fontRenderer, line, (int) x + (width - fontRenderer.width(line)), (int) _y, color, dropShadow);
+            }
+        } else if (type == TextType.RIGHT_POP_OUT_BG) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY)) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x + width - fontRenderer.width(text) - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(text) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                graphics.drawString(fontRenderer, text, (int) x + width - fontRenderer.width(text), (int) y + height / 2 - fontRenderer.lineHeight / 2 - 1, color, dropShadow);
+            }
+            else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x + width - fontRenderer.width(line) - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(line) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                float _y = y + (height - textH) / 2f;
+                graphics.drawString(fontRenderer, line, (int) x + (width - fontRenderer.width(line)), (int) _y, color, dropShadow);
+            }
+        } else if (type == TextType.LEFT_POP_OUT) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY)) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(text) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                graphics.drawString(fontRenderer, text, (int) x, (int) y + height / 2 - fontRenderer.lineHeight / 2 - 1, color, dropShadow);
+            }
+            else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                float _y = y + (height - textH) / 2f;
+                graphics.drawString(fontRenderer, line, (int) x, (int) _y, color, dropShadow);
+            }
+        } else if (type == TextType.LEFT_POP_OUT_BG) {
+            if (Widget.isMouseOver((int) x, (int) y, width, height, mouseX, mouseY)) {
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(text) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                graphics.drawString(fontRenderer, text, (int) x, (int) y + height / 2 - fontRenderer.lineHeight / 2 - 1, color, dropShadow);
+            }
+            else {
+                String line = texts.get(0) + (texts.size() > 1 ? ".." : "");
+                drawBackgroundInternal(graphics, mouseX, mouseY, (int) x - inflateBackgroundX, (int) y + height / 2f - fontRenderer.lineHeight / 2f - inflateBackgroundY - 1, fontRenderer.width(line) + inflateBackgroundX * 2, fontRenderer.lineHeight + inflateBackgroundY * 2);
+                float _y = y + (height - textH) / 2f;
+                graphics.drawString(fontRenderer, line, (int) x, (int) _y, color, dropShadow);
+            }
         }
         graphics.pose().popPose();
         RenderSystem.setShaderColor(1, 1, 1, 1);
+    }
+
+    @Override
+    public void setUIResource(Resource<IGuiTexture> texturesResource) {
+        if(backgroundTexture != null) backgroundTexture.setUIResource(texturesResource);
+    }
+
+    @Environment(EnvType.CLIENT)
+    private void drawBackgroundInternal(GuiGraphics graphics, int mouseX, int mouseY, float x, float y, int width, int height) {
+        if (backgroundTexture != null) {
+            Color color = new Color(backgroundColor);
+            graphics.setColor((float) color.getRed() / 255, (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255);
+            backgroundTexture.draw(graphics, mouseX, mouseY, (int) x - inflateBackgroundX, (int) y - inflateBackgroundY, width + inflateBackgroundX * 2, height + inflateBackgroundY * 2);
+            graphics.setColor(1,1,1,1);
+        }
+        else DrawerHelper.drawSolidRect(graphics, (int) x - inflateBackgroundX, (int) y - inflateBackgroundY, width + inflateBackgroundX * 2, height + inflateBackgroundY * 2, backgroundColor);
     }
 
     @Environment(EnvType.CLIENT)
@@ -244,12 +368,31 @@ public class TextTexture extends TransformTexture {
     public enum TextType{
         NORMAL,
         HIDE,
+        OVERFLOW,
+        POP_OUT(true),
+        POP_OUT_BG(true),
         ROLL,
         ROLL_ALWAYS,
         LEFT,
         RIGHT,
+        RIGHT_OVERFLOW,
+        RIGHT_POP_OUT(true),
+        RIGHT_POP_OUT_BG(true),
+        RIGHT_HIDE,
         LEFT_HIDE,
         LEFT_ROLL,
-        LEFT_ROLL_ALWAYS
+        LEFT_ROLL_ALWAYS,
+        LEFT_OVERFLOW,
+        LEFT_POP_OUT(true),
+        LEFT_POP_OUT_BG(true);
+
+        public final boolean customBackground;
+
+        TextType() {
+            this.customBackground = false;
+        }
+        TextType(boolean customBackground) {
+            this.customBackground = customBackground;
+        }
     }
 }
