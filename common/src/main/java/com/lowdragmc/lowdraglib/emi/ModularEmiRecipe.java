@@ -114,11 +114,12 @@ public abstract class ModularEmiRecipe<T extends Widget> implements EmiRecipe {
                     var ingredients = EmiIngredient.of((List<? extends EmiIngredient>) (List<?>) slot.getXEIIngredients());
 
                     SlotWidget slotWidget = null;
+                    var isEmpty = ingredients.isEmpty();
                     // Clear the LDLib slots & add EMI slots based on them.
-                    if (slot instanceof com.lowdragmc.lowdraglib.gui.widget.SlotWidget slotW) {
+                    if (!isEmpty && slot instanceof com.lowdragmc.lowdraglib.gui.widget.SlotWidget slotW) {
                         clearSlotWidgetHandler(slotW, 0);
                         slotWidget = new SlotWidget(ingredients, w.getPosition().x, w.getPosition().y);
-                    } else if (slot instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget tankW) {
+                    } else if (!isEmpty && slot instanceof com.lowdragmc.lowdraglib.gui.widget.TankWidget tankW) {
                         clearTankWidgetHandler(tankW);
                         long capacity = Math.max(1, ingredients.getAmount());
                         slotWidget = new TankWidget(ingredients, w.getPosition().x, w.getPosition().y, w.getSize().width, w.getSize().height, capacity);

@@ -17,3 +17,5 @@
 
 * Fixed bug where drag splitting an itemStack would not render correctly.
 * Fixed missing lang for some widget
+* Fixed EMI invisible tooltips for slots
+* Improve Renderer to check blockstate if the medeldata not found

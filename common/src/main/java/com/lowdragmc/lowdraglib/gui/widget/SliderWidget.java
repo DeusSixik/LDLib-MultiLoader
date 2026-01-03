@@ -19,9 +19,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @LDLRegister(name = "slider", group = "widget.basic")
 @RemapPrefixForJS("kjs$")
@@ -82,8 +84,11 @@ public class SliderWidget extends Widget implements IConfigurableWidget {
     private boolean isSelected = false;
 
     @Setter
+    @Nullable
+    private Supplier<Float> sliderValueProvider = null;
+    @Setter
+    @Nullable
     private Consumer<Float> sliderCallback = null;
-    protected float oldValue;
 
     public SliderWidget setDefaultKeysHorizontal() {
         rightDownKey  = 262;
@@ -142,16 +147,15 @@ public class SliderWidget extends Widget implements IConfigurableWidget {
         if (button != 0) return false;
         if (!isDragging && !isMouseOverElement(mouseX, mouseY)) return false;
         isDragging = true;
-        if (direction == SliderDirection.HORIZONTAL) sliderValue = Math.round(Mth.clamp((mouseX - getPositionX() - handleSize / 2f) / (getSizeWidth() - handleSize), 0, 1) * calculateStepSize()) / calculateStepSize();
-        else sliderValue = Math.round(Mth.clamp((mouseY - getPositionY() - handleSize / 2f) / (getSizeHeight() - handleSize), 0, 1) * calculateStepSize()) / calculateStepSize();
+        var oldValue = sliderValue;
+        var newValue = 0f;
+        if (direction == SliderDirection.HORIZONTAL) newValue = Math.round(Mth.clamp((mouseX - getPositionX() - handleSize / 2f) / (getSizeWidth() - handleSize), 0, 1) * calculateStepSize()) / calculateStepSize();
+        else newValue = Math.round(Mth.clamp((mouseY - getPositionY() - handleSize / 2f) / (getSizeHeight() - handleSize), 0, 1) * calculateStepSize()) / calculateStepSize();
 
-        if (oldValue != sliderValue) {
-            writeClientAction(1, buffer -> {
-                buffer.writeFloat(sliderValue);
-            });
+        if (oldValue != newValue) {
+            setValue(newValue);
             if (sliderCallback != null) sliderCallback.accept(sliderValue);
         }
-        oldValue = sliderValue;
         return true;
     }
 
@@ -212,12 +216,14 @@ public class SliderWidget extends Widget implements IConfigurableWidget {
 
     @Info("Sets the value (from 0 to 1)")
     public void setValue(float value) {
+        if (sliderValue == value) return;
         sliderValue = value;
 
         if (isRemote()) {
-            writeClientAction(2, buffer -> buffer.writeFloat(sliderValue));
+            if (isClientSideWidget()) return;
+            writeClientAction(1, buffer -> buffer.writeFloat(sliderValue));
         } else {
-            writeUpdateInfo(2, buffer -> buffer.writeFloat(sliderValue));
+            writeUpdateInfo(1, buffer -> buffer.writeFloat(sliderValue));
         }
     }
 
@@ -229,12 +235,22 @@ public class SliderWidget extends Widget implements IConfigurableWidget {
 
     @Override
     public void readInitialData(FriendlyByteBuf buffer) {
-        setValue(buffer.readFloat());
+        sliderValue = buffer.readFloat();
     }
 
     @Override
     public void detectAndSendChanges() {
-        writeUpdateInfo(1, buffer -> buffer.writeFloat(sliderValue));
+        if (sliderValueProvider != null) {
+            setValue(sliderValueProvider.get());
+        }
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (isClientSideWidget() && sliderValueProvider != null) {
+            setValue(sliderValueProvider.get());
+        }
     }
 
     @Override

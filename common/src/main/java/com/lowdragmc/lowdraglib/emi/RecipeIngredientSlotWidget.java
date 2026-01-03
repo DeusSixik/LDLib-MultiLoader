@@ -48,7 +48,7 @@ public class RecipeIngredientSlotWidget extends SlotWidget {
     @Override
     public List<ClientTooltipComponent> getTooltip(int mouseX, int mouseY) {
         var tooltips = super.getTooltip(mouseX, mouseY);
-        for (var component : slot.self().getTooltipTexts()) {
+        for (var component : slot.getFullTooltipTexts()) {
             tooltips.add(ClientTooltipComponent.create(EmiPort.ordered(component)));
         }
         return tooltips;

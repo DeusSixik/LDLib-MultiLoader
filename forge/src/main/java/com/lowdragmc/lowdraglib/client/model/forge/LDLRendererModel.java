@@ -102,6 +102,9 @@ public class LDLRendererModel implements IUnbakedGeometry<LDLRendererModel> {
             IRenderer renderer = data.get(IRENDERER);
             BlockAndTintGetter world = data.get(WORLD);
             BlockPos pos = data.get(POS);
+            if (renderer == null && state != null && state.getBlock() instanceof IBlockRendererProvider rendererProvider) {
+                renderer = rendererProvider.getRenderer(state);
+            }
             if (renderer != null) {
                 CURRENT_MODEL_DATA.set(data);
                 CURRENT_RENDER_TYPE.set(renderType);

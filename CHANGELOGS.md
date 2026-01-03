@@ -16,8 +16,10 @@
 * CodeEditorWidget: option for unformatted text, basically just a text pane. (UNTESTED)
 * Added SliderWidget
     * Known issue: when dragging a slider, if the cursor passes a slider widget lower on the update order, the dragging will be stolen.
-
+* Fixed EMI invisible tooltips for slots
+* Improve Renderer to check blockstate if the medeldata not found
 * Fixed bug where drag splitting an itemStack would not render correctly.
+
 ## v1.0.47
 * Fixed a Mixin issue while loading massive mods
 
