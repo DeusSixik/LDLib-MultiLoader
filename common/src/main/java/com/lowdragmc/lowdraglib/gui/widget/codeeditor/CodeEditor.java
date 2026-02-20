@@ -25,6 +25,35 @@ public class CodeEditor {
     // runtime
     private List<StyledLine> visibleLinesCache;
 
+    public static final List<Character> stopQuickMoveChars = List.of(
+        ' ',
+        '\n',
+        '.',
+        '/',
+        '\\',
+        '(',
+        ')',
+        '{',
+        '}',
+        '[',
+        ']',
+        '-',
+        '+',
+        '\"',
+        '\'',
+        '?',
+        ':',
+        ';',
+        '!',
+        '@',
+        '#',
+        '$',
+        '%',
+        '^',
+        '&',
+        '*'
+    );
+
     public CodeEditor() {
         document = new Document();
         syntaxParser = new SyntaxParser();
@@ -270,6 +299,34 @@ public class CodeEditor {
         }
     }
 
+    public void moveCursorLeft(boolean ctrl) {
+        if(cursor.column() == 0) {
+            moveCursorLeft();
+            return;
+        }
+        if(document.getLine(cursor.line()).length() <= cursor.column() - 1) moveCursorLeft();
+        boolean startOnSpace = document.getLine(cursor.line()).charAt(cursor.column() - 1) == ' ';
+
+        boolean firstMove = true;
+        if(ctrl) while(true) {
+            if(cursor.column() == 0) break;
+            char c = document.getLine(cursor.line()).charAt(cursor.column() - 1);
+            if(startOnSpace) {
+                if(c != ' ' && c != '\n') break;
+                moveCursorLeft();
+            }
+            else {
+                if(stopQuickMoveChars.contains(c)) {
+                    if(firstMove) moveCursorLeft();
+                    break;
+                }
+                moveCursorLeft();
+            }
+            firstMove = false;
+        }
+        else moveCursorLeft();
+    }
+
     public void moveCursorRight() {
         if (cursor.column() < document.getLine(cursor.line()).length()) {
             setCursorColumn(cursor.column() + 1);
@@ -277,6 +334,33 @@ public class CodeEditor {
             setCursorLine(cursor.line() + 1);
             setCursorColumn(0);
         }
+    }
+
+    public void moveCursorRight(boolean ctrl) {
+        if(document.getLine(cursor.line()).length() <= cursor.column()) {
+            moveCursorRight();
+            return;
+        }
+        boolean startOnSpace = document.getLine(cursor.line()).charAt(cursor.column()) == ' ';
+
+        boolean firstMove = true;
+        if(ctrl) while(true) {
+            if(document.getLine(cursor.line()).length() <= cursor.column()) break;
+            char c = document.getLine(cursor.line()).charAt(cursor.column());
+            if(startOnSpace) {
+                if(c != ' ' && c != '\n') break;
+                moveCursorRight();
+            }
+            else {
+                if(stopQuickMoveChars.contains(c)) {
+                    if(firstMove) moveCursorRight();
+                    break;
+                }
+                moveCursorRight();
+            }
+            firstMove = false;
+        }
+        else moveCursorRight();
     }
 
     public void moveCursorStart() {
@@ -358,6 +442,26 @@ public class CodeEditor {
 
     public void selectAll() {
         selection = new Selection(new Cursor(0, 0), new Cursor(document.getLineCount() - 1, document.getLine(document.getLineCount() - 1).length()));
+    }
+
+    public void selectWord(Cursor location) {
+        int startCol = location.column();
+        int endCol = location.column();
+        int cursorLine = location.line();
+        String line = getLines().get(cursorLine);
+        while(startCol > 0 && !CodeEditor.stopQuickMoveChars.contains(line.charAt(startCol - 1))) {
+            startCol--;
+        }
+        while(endCol < line.length() && !CodeEditor.stopQuickMoveChars.contains(line.charAt(endCol))) {
+            endCol++;
+        }
+        selection = new Selection(new Cursor(cursorLine, startCol), new Cursor(cursorLine, endCol));
+    }
+
+    public void selectLine(Cursor location) {
+        int cursorLine = location.line();
+        String line = getLines().get(cursorLine);
+        selection = new Selection(new Cursor(cursorLine, 0), new Cursor(cursorLine, line.length()));
     }
 
     // 删除选中内容

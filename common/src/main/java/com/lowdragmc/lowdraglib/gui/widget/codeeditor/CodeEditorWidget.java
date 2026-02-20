@@ -37,6 +37,9 @@ public class CodeEditorWidget extends WidgetGroup {
     protected IGuiTexture yBarF = ColorPattern.T_GRAY.rectTexture().setRadius(2);
     @Setter
     protected Consumer<List<String>> onTextChanged;
+    /// The max amount of time in ms between clicks for it to register as a double click, defaults to 300ms
+    @Setter
+    private long doubleClickMarginMillis = 300;
 
     // runtime
     private boolean isHoveringXBar;
@@ -44,6 +47,8 @@ public class CodeEditorWidget extends WidgetGroup {
     private boolean isDraggingXBar;
     private boolean isDraggingYBar;
     private double lastDeltaX, lastDeltaY;
+    private long lastClickMillis = 0;
+    private int clickCount = 0;
 
     public CodeEditorWidget(int x, int y, int width, int height) {
         super(x, y, width, height);
@@ -105,6 +110,17 @@ public class CodeEditorWidget extends WidgetGroup {
             codeEditor.setCursor(getCursor(mouseX, mouseY));
             codeEditor.startSelection();
             codeEditor.startSelection();
+            if(lastClickMillis + doubleClickMarginMillis >= System.currentTimeMillis()) {
+                clickCount++;
+                if(clickCount == 2) {
+                    codeEditor.selectWord(codeEditor.getCursor());
+                }
+                if(clickCount > 2) {
+                    codeEditor.selectLine(codeEditor.getCursor());
+                }
+            }
+            else clickCount = 1;
+            lastClickMillis = System.currentTimeMillis();
             return true;
         }
         if (isFocus()) {
@@ -167,6 +183,7 @@ public class CodeEditorWidget extends WidgetGroup {
     @Environment(EnvType.CLIENT)
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (canConsumeInput()) {
+            boolean needAlignCursor = true;
             var previous = getLines();
             if (Screen.isSelectAll(keyCode)) {
                 this.codeEditor.selectAll();
@@ -179,12 +196,15 @@ public class CodeEditorWidget extends WidgetGroup {
                 this.codeEditor.deleteSelection();
             } else {
                 switch (keyCode) {
-                    case GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT -> codeEditor.startSelection();
+                    case GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT -> {
+                        needAlignCursor = false;
+                        codeEditor.startSelection();
+                    }
                     case GLFW.GLFW_KEY_ENTER -> codeEditor.enter();
                     case GLFW.GLFW_KEY_BACKSPACE -> codeEditor.backspace();
                     case GLFW.GLFW_KEY_DELETE -> codeEditor.deleteForwardText();
                     case GLFW.GLFW_KEY_RIGHT -> {
-                        codeEditor.moveCursorRight();
+                        codeEditor.moveCursorRight(isCtrlDown());
                         if (isShiftDown()) {
                             codeEditor.updateSelection();
                         } else {
@@ -192,7 +212,7 @@ public class CodeEditorWidget extends WidgetGroup {
                         }
                     }
                     case GLFW.GLFW_KEY_LEFT -> {
-                        codeEditor.moveCursorLeft();
+                        codeEditor.moveCursorLeft(isCtrlDown());
                         if (isShiftDown()) {
                             codeEditor.updateSelection();
                         } else {
@@ -218,9 +238,10 @@ public class CodeEditorWidget extends WidgetGroup {
                     case GLFW.GLFW_KEY_TAB -> codeEditor.insertText(codeEditor.getIndentString());
                     case GLFW.GLFW_KEY_HOME -> codeEditor.moveCursorStart();
                     case GLFW.GLFW_KEY_END -> codeEditor.moveCursorEnd();
+                    default -> needAlignCursor = false;
                 };
             }
-            adaptCursor();
+            if (needAlignCursor) adaptCursor();
             if (!previous.equals(getLines())) {
                 notifyChanged();
             }
@@ -312,13 +333,20 @@ public class CodeEditorWidget extends WidgetGroup {
             var hasXBar = fullWidth > size.width;
             var availableHeight = size.height - (hasXBar ? 4 : 0);
             var hasYBar = fullHeight > availableHeight;
+            var availableWidth = size.width - (hasYBar ? 4 : 0);
 
-            if (hasYBar) {
-                int moveDelta = (int) (-Mth.clamp(wheelDelta, -1, 1) * 13);
-                scrollYOffset += moveDelta;
-                scrollYOffset = Mth.clamp(scrollYOffset, 0, fullHeight - availableHeight);
+            if (isShiftDown()) {
+                if (hasXBar) {
+                    int moveDelta = (int) (-Mth.clamp(wheelDelta, -1, 1) * 13);
+                    scrollXOffset += moveDelta;
+                    scrollXOffset = Mth.clamp(scrollXOffset, 0, fullWidth - availableWidth);
+                }
             } else {
-                scrollYOffset = 0;
+                if (hasYBar) {
+                    int moveDelta = (int) (-Mth.clamp(wheelDelta, -1, 1) * 13);
+                    scrollYOffset += moveDelta;
+                    scrollYOffset = Mth.clamp(scrollYOffset, 0, fullHeight - availableHeight);
+                }
             }
             return true;
         }
@@ -396,7 +424,8 @@ public class CodeEditorWidget extends WidgetGroup {
                     var start = line == range[0] ? font.width(Component.literal(codeEditor.getDocument().getLine(line).substring(0, range[1]))
                             .withStyle(Style.EMPTY.withFont(MONO_BOLD))) - 1 : 0;
                     var end = line == range[2] ? font.width(Component.literal(codeEditor.getDocument().getLine(line).substring(0, range[3]))
-                            .withStyle(Style.EMPTY.withFont(MONO_BOLD))) - 1 : getSizeWidth();
+                            .withStyle(Style.EMPTY.withFont(MONO_BOLD))) - 1 : font.width(Component.literal(codeEditor.getDocument().getLine(line))
+                        .withStyle(Style.EMPTY.withFont(MONO_BOLD))) - 1;
                     graphics.fill(pos.x + start + xOffset,
                             pos.y + i * lineHeight + yOffset - 2,
                             pos.x + end + xOffset,
